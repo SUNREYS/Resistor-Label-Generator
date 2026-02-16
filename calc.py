@@ -10,4 +10,5 @@ def prefix_conversion(val):
 
 resist_multi_col_dict = ["black", "brown", "red", "orange", "yellow", "green", "blue", "violet", "grey", "white", "gold", "silver"]
 tol_col_dict = ["brown", "red", "green", "blue", "violet", "grey", "gold", "silver"]
+ppm_col_dict = ["brown", "red", "orange", "yellow", "blue", "violet", "grey"]
 
