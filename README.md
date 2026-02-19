@@ -9,7 +9,7 @@ A Python tool for calculating resistor values and generating industrial-style co
 ## Features
 
 * **Multi-Band Support**: Calculation and rendering for 4-band, 5-band, and 6-band (PPM) resistors.
-* **Industrial Label Generation**: Generates 1600x300 resolution labels including:
+* **Industrial Resistor Label Generation**: Generates 1600x300 resolution labels including:
     * Resistance value with auto-prefixing (Ω, kΩ, MΩ, GΩ).
     * Multiplier.
     * Tolerance percentage.
