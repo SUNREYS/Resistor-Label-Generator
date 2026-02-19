@@ -4,6 +4,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from PIL import ImageTk, Image
