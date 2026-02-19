@@ -9,8 +9,5 @@ dist/
 .venv/
 env/
 
-sample1.png
-sample2.png
 resistor_app.spec
 icon.ico
-image.png
