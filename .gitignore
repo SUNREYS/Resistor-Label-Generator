@@ -9,5 +9,4 @@ dist/
 .venv/
 env/
 
-resistor_app.spec
 icon.ico
