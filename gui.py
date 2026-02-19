@@ -1,15 +1,17 @@
 import tkinter as tk
 from tkinter import * 
 from tkinter import ttk
-from tkinter.filedialog import asksaveasfile
-from PIL import ImageTk
+from tkinter import filedialog
+from PIL import ImageTk, Image
 import front
 import calc
 
 root = tk.Tk()
-root.geometry("700x700")
+root.geometry("900x900")
 
 num_bands_list = [4, 5, 6]
+body_col_list = ["beige", "blue"]
+watt_list = ["0.03125", "0.05", "0.0625", "0.1", "0.125", "0.25", "0.5", "1.0", "2.0", "3.0", "5.0", "10.0", "20.0", "25.0", "50.0", "100.0"]
 color_label_format = ["0: Black", "1: Brown", "2: Red", "3: Orange", "4: Yellow", "5: Green", "6: Blue", "7: Violet", "8: Grey", "9: White"]
 multiplier_label = ["0: Black ×1 Ω", "1: Brown ×10 Ω", "2: Red ×100 Ω", "3: Orange ×1 kΩ", "4: Yellow ×10 kΩ", "5: Green ×100 kΩ", "6: Blue ×1 MΩ", "7: Violet ×10 MΩ", "8: Grey ×100 MΩ", "9: White ×1 GΩ", "10: Gold ×0.1 Ω", "11: Silver ×0.01 Ω"]
 tolerance_label = ["0: Brown ± 1%", "1: Red ± 2%", "2: Green ± 0.5%", "3: Blue ± 0.25%", "4: Violet ± 0.1%", "5: Grey ± 0.05%", "6: Gold ± 5%", "7: Silver ± 10%"]
@@ -40,16 +42,8 @@ def create_band(parent, label_text, default_text, options, color_dict):
     # Return the variable, the frame, and menu
     return var, frame, menu
 
-# Resistance Display
-resistance_frame = tk.Frame(root)
-resistance_frame.pack(pady=5)
-tk.Label(resistance_frame, text="Resistance Value:", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
-resistance_val = ttk.Entry(root)
-resistance_val.pack()
-
 # Resistor
-resistor_canvas = tk.Label(root)
-resistor_canvas.pack(pady=20)
+resistor_canvas = tk.Label(root); resistor_canvas.pack(pady=20)
 
 # Digit Bands
 band1_val, band1_frame, band1_menu = create_band(root, "Band 1:", "Select color band 1", color_label_format, calc.resist_multi_col_dict)
@@ -66,8 +60,34 @@ band1_frame.pack(pady=5)
 band2_frame.pack(pady=5)
 multiplier_frame.pack(pady=5)
 tolerance_frame.pack(pady=5)
+# Number of Bands
+num_bands_frame = tk.Frame(root)
+num_bands_frame.pack(pady=10)
+tk.Label(num_bands_frame, text="Number of Bands:", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
+num_bands_val = tk.StringVar(root)
+
+# Body style
+body_col_frame = tk.Frame(root)
+body_col_frame.pack(pady=10)
+tk.Label(body_col_frame, text="Body Color:", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
+body_col_val = tk.StringVar(root)
+
+# Resistor watt
+watt_frame = tk.Frame(root)
+watt_frame.pack(pady=10)
+tk.Label(watt_frame, text="Watt:", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
+watt_val = tk.StringVar(root)
+
+resistance_frame = tk.Frame(root)
+resistance_frame.pack(pady=5)
+
+# Label inside the frame
+tk.Label(resistance_frame, text="Resistance Value:", font=("Arial", 14, "bold")).pack(side=tk.LEFT, padx=5)
+resistance_val = ttk.Entry(resistance_frame, font=("Arial", 12)); resistance_val.pack(side=tk.LEFT)
 
 def update_calc(*args):
+    global raw_ohms, active_colors
+    raw_ohms = 0
     def get_idx(var):
         s = var.get()
         if ":" in s:
@@ -76,12 +96,12 @@ def update_calc(*args):
             except ValueError:
                 return None
         return None
-    active_colors = []
     d1, d2, d3,  = get_idx(band1_val), get_idx(band2_val), get_idx(band3_val)
     m_idx, t_idx, p_idx = get_idx(multiplier_val), get_idx(tolerance_val), get_idx(ppm_val)
     num_bands = num_bands_val.get()
     menu_color = [(d1, band1_menu), (d2, band2_menu), (m_idx, multiplier_menu), (t_idx, tolerance_menu)]
     res_digits, tol_text, ppm_text = "", "", ""
+    
     if num_bands in ["5", "6"]: menu_color.append((d3, band3_menu))
     if num_bands == "6": menu_color.append((p_idx, ppm_menu))
     if d1 is not None and d2 is not None:
@@ -121,29 +141,46 @@ def update_calc(*args):
     for val, c_dict in config:
         if val is not None:
             active_colors.append(c_dict[val])
-        else:
-            active_colors.append("#E6D7BD") # Body beige if not selected
 
     # Apply menu background colors
     for val, menu in menu_color:
         if val is not None:
-            if menu == tolerance_menu: bg = calc.tol_col_dict[int(val)]
-            elif menu == ppm_menu: bg = calc.ppm_col_dict[int(val)]
-            else: bg = calc.resist_multi_col_dict[int(val)]
-            fg = "white" if bg in ["black", "brown", "blue", "violet"] else "black"
-            menu.config(bg=bg, fg=fg, activebackground=bg)
-                
+            # pick correct palette
+            if menu == tolerance_menu:
+                bg = calc.tol_col_dict[val]
+            elif menu == ppm_menu:
+                bg = calc.ppm_col_dict[val]
+            else:
+                bg = calc.resist_multi_col_dict[val]
+
+            # better contrast rule
+            dark_colors = {"black", "brown", "blue", "violet"}
+            fg = "white" if bg.lower() in dark_colors else "black"
+
+            menu.config(bg=bg, fg=fg, activebackground=bg, activeforeground=fg)
     # Generate and display image
-    pil_img = front.draw_resistor_img(active_colors)
-    tk_img = ImageTk.PhotoImage(pil_img)
+    root.update_idletasks()
+    win_width = root.winfo_width()
+    req_size = (max(300, int(win_width * 0.8)), 300)
+
+    # Primary Resistor Image
+    pil_img = front.draw_resistor_img(active_colors, body_style=body_col_val.get())
+    disp_img = pil_img.copy()
+    disp_img.thumbnail(req_size, resample=Image.LANCZOS)
+    
+    tk_img = ImageTk.PhotoImage(disp_img)
     resistor_canvas.config(image=tk_img)
     resistor_canvas.image = tk_img
     
-    # Generate and display label image
-    pil_img2 = front.draw_resistor_label(active_colors)
-    tk_img2 = ImageTk.PhotoImage(pil_img2)
-    resistor_canvas_label.config(image=tk_img2)
-    resistor_canvas_label.image = tk_img2
+    # Label Image
+    pil_label = front.draw_resistor_label(raw_ohms, active_colors, body_style=body_col_val.get(), watt=watt_val.get())
+    disp_label = pil_label.copy()
+    disp_label.thumbnail(req_size, resample=Image.LANCZOS)
+    
+    tk_label = ImageTk.PhotoImage(disp_label)
+    resistor_canvas_label.config(image=tk_label)
+    resistor_canvas_label.image = tk_label
+    print(active_colors)
 
 # Know atleast 4 bands
 def toggle_bands(*args):
@@ -160,25 +197,37 @@ def toggle_bands(*args):
         ppm_frame.pack_forget()
     update_calc()
 
-# Number of Bands
-num_bands_frame = tk.Frame(root)
-num_bands_frame.pack(pady=10)
-tk.Label(num_bands_frame, text="Number of Bands:", font=("Arial", 10, "bold")).pack(side=tk.LEFT, padx=5)
-num_bands_val = tk.StringVar(root)
+body_col_menu = tk.OptionMenu(body_col_frame, body_col_val, *body_col_list)
+body_col_menu.pack(side=tk.LEFT)
+
+watt_val.set("0.25")
+watt_menu = tk.OptionMenu(watt_frame, watt_val, *watt_list)
+watt_menu.pack(side=tk.LEFT)
 
 # Default number of bands
 num_bands_val.set("4")
 num_bands_val.trace_add("write", toggle_bands)
 num_bands_menu = tk.OptionMenu(num_bands_frame, num_bands_val, *num_bands_list)
 num_bands_menu.pack(side=tk.LEFT)
-
-for menu in [band1_val, band2_val, band3_val, multiplier_val, tolerance_val, ppm_val]:
+for menu in [band1_val, band2_val, band3_val, multiplier_val, tolerance_val, ppm_val, body_col_val, watt_val]:
     menu.trace_add("write", update_calc)
 
-def print_answers():
-    print("Selected opt: {}".format(band1_val.get()))
+def save_label_image():
+    img = front.draw_resistor_label(raw_ohms, active_colors, body_style=body_col_val.get(), watt=watt_val)
+    update_calc()
 
-submit_button = tk.Button(root, text='Submit', command=print_answers)
+    file_path = filedialog.asksaveasfilename(
+        defaultextension=".png",
+        filetypes=[("PNG image", "*.png")],
+        title="Save resistor label"
+    )
+
+    if not file_path:
+        return
+
+    img.save(file_path, dpi=(300, 300))
+
+submit_button = tk.Button(root, text='Submit', command=save_label_image)
 submit_button.pack()
 
 # Print label on GUI
