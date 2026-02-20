@@ -20,7 +20,7 @@ A Python tool for calculating resistor values and generating industrial-style co
 ## Project Structure
 
 * `resistor_app.py`: The main entry point. Handles the Tkinter GUI and user interaction.
-* `renderer.py`: The graphics engine.
+* `image_gen.py`: The graphics engine.
 * `resistor_data.py`: Contains all color dictionaries.
 * `font/`: Contains `osifont.ttf`.
 
